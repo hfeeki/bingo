@@ -63,7 +63,7 @@ func (self *ResponseWriter) WriteJson(v interface{}) error {
 // Produce an error response in JSON with the following structure, '{"Error":"My error message"}'
 // The standard plain text net/http Error helper can still be called like this:
 // http.Error(w, "error message", code)
-func Error(w *ResponseWriter, error string, code int) {
+func JsonError(w *ResponseWriter, error string, code int) {
 	w.Header().Set("content-type", "application/json")
 	w.WriteHeader(code)
 	err := w.WriteJson(map[string]string{"Error": error})
@@ -76,5 +76,5 @@ func Error(w *ResponseWriter, error string, code int) {
 // The standard plain text net/http NotFound helper can still be called like this:
 // http.NotFound(w, r.Request)
 func NotFound(w *ResponseWriter, r *Request) {
-	Error(w, "Resource not found", http.StatusNotFound)
+	JsonError(w, "Resource not found", http.StatusNotFound)
 }

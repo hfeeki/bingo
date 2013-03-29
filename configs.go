@@ -2,7 +2,7 @@ package bingo
 
 import (
 	"errors"
-	"jindou.io/bingo/config"
+	"github.com/hfeeki/bingo/config"
 	"path"
 	"strings"
 )

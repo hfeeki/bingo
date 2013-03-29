@@ -41,6 +41,7 @@ package bingo
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/hfeeki/bingo/urlrouter"
 	"log"
 	"net/http"
 	"os"
@@ -54,7 +55,7 @@ import (
 // The defaults are intended to be developemnt friendly, for production you may want
 // to turn on gzip and disable the JSON indentation.
 type ResourceHandler struct {
-	router         Router
+	router         urlrouter.Router
 	status_service *status_service
 
 	// If true, and if the client accepts the Gzip encoding, the response payloads
@@ -109,11 +110,14 @@ func RouteObjectMethod(http_method string, path_exp string, object_instance inte
 			value,
 		))
 	}
-	route_func := func(w *ResponseWriter, r *Request) {
-		func_value.Call([]reflect.Value{
-			reflect.ValueOf(w),
-			reflect.ValueOf(r),
+	route_func := func(e Env) (Status, Headers, Body) {
+		v := func_value.Call([]reflect.Value{
+			reflect.ValueOf(e),
 		})
+		s := Status(v[0].Int())
+		h := v[1].Interface().(Headers) // type assertion only for interface 
+		b := Body(v[2].String())
+		return s, h, b
 	}
 
 	return Route{
@@ -138,7 +142,7 @@ func (self *ResourceHandler) SetRoutes(routes ...Route) error {
 		self.router.Routes = append(
 			self.router.Routes,
 			urlrouter.Route{
-				Pattern: http_method + route.Pattern,
+				PathExp: http_method + route.Pattern,
 				Dest:    route.Action,
 			},
 		)
@@ -150,7 +154,7 @@ func (self *ResourceHandler) SetRoutes(routes ...Route) error {
 		self.router.Routes = append(
 			self.router.Routes,
 			urlrouter.Route{
-				Pattern: "GET/.status",
+				PathExp: "GET/.status",
 				Dest: func(w *ResponseWriter, r *Request) {
 					self.status_service.get_status(w, r)
 				},
