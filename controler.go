@@ -2,39 +2,44 @@ package bingo
 
 import (
 	"fmt"
-	"github.com/ant0ine/go-json-rest"
 )
 
 type MyResourceHandler struct {
-	rest.ResourceHandler
+	ResourceHandler
 }
 
 type ResourceController interface {
-	Show(w *rest.ResponseWriter, req *rest.Request)
-	Create(w *rest.ResponseWriter, req *rest.Request)
-	Update(w *rest.ResponseWriter, req *rest.Request)
-	Delete(w *rest.ResponseWriter, req *rest.Request)
+	Show(Env) (Status, Headers, Body)
+	Index(Env) (Status, Headers, Body)
+	Create(Env) (Status, Headers, Body)
+	Update(Env) (Status, Headers, Body)
+	Delete(Env) (Status, Headers, Body)
 }
 
 func (self *MyResourceHandler) AddResource(name string, c ResourceController) error {
-	show_func := func(w *rest.ResponseWriter, r *rest.Request) {
-		c.Show(w, r)
+	show_func := func(e Env) (s Status, h Headers, b Body) {
+		s, h, b = c.Show(e)
+		return s, h, b
 	}
-	create_func := func(w *rest.ResponseWriter, r *rest.Request) {
-		c.Create(w, r)
+	index_func := func(e Env) (s Status, h Headers, b Body) {
+		return c.Index(e)
 	}
-	update_func := func(w *rest.ResponseWriter, r *rest.Request) {
-		c.Update(w, r)
+	create_func := func(e Env) (s Status, h Headers, b Body) {
+		return c.Create(e)
 	}
-	delete_func := func(w *rest.ResponseWriter, r *rest.Request) {
-		c.Delete(w, r)
+	update_func := func(e Env) (s Status, h Headers, b Body) {
+		return c.Update(e)
+	}
+	delete_func := func(e Env) (Status, Headers, Body) {
+		return c.Delete(e)
 	}
 
 	err := self.ResourceHandler.SetRoutes(
-		rest.Route{"GET", fmt.Sprintf("/%s/:id", name), show_func},
-		rest.Route{"POST", fmt.Sprintf("/%s", name), create_func},
-		rest.Route{"PUT", fmt.Sprintf("/%s/:id", name), update_func},
-		rest.Route{"DELETE", fmt.Sprintf("/%s/:id", name), delete_func},
+		Route{"GET", fmt.Sprintf("/%s/:id", name), show_func},
+		Route{"GET", fmt.Sprintf("/%s", name), index_func},
+		Route{"POST", fmt.Sprintf("/%s", name), create_func},
+		Route{"PUT", fmt.Sprintf("/%s/:id", name), update_func},
+		Route{"DELETE", fmt.Sprintf("/%s/:id", name), delete_func},
 	)
 	return err
 }
